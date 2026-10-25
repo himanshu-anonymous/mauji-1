@@ -7,10 +7,29 @@ from datetime import timedelta
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import requests
-from openai import AsyncOpenAI
-from temporalio import activity, workflow
-from temporalio.client import Client
-from temporalio.worker import Worker
+
+try:
+    from openai import AsyncOpenAI
+except Exception:
+    AsyncOpenAI = None
+
+try:
+    from temporalio import activity, workflow
+    from temporalio.client import Client
+    from temporalio.worker import Worker
+except ImportError:
+    # Fallback dummies for local testing without temporalio installed
+    class DummyWorkflow:
+        defn = lambda x: x
+        run = lambda x: x
+        execute_activity = staticmethod(lambda act, *args, **kwargs: act(*args))
+    class DummyActivity:
+        defn = lambda x: x
+        logger = type("Logger", (), {"info": print, "warning": print, "error": print})()
+    workflow = DummyWorkflow
+    activity = DummyActivity
+    Client = None
+    Worker = None
 
 TASK_QUEUE_NAME = "github-copilot-task-queue"
 
@@ -249,7 +268,6 @@ async def triage_github_actions(github_context: Dict[str, Any]) -> Dict[str, Any
     }
 
     try:
-        # Fetch 5 most recent workflow runs
         url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs?per_page=5"
         resp = requests.get(url, headers=headers, timeout=12)
         if resp.status_code == 200:
@@ -280,7 +298,8 @@ async def triage_github_actions(github_context: Dict[str, Any]) -> Dict[str, Any
                     report["ci_passing"] = True
                     report["summary"] = f"Latest GitHub Actions run ('{latest.get('name')}') succeeded on branch {latest.get('head_branch')}."
     except Exception as e:
-        activity.logger.info(f"Actions triage non-blocking exception: {e}")
+        if hasattr(activity, "logger"):
+            activity.logger.info(f"Actions triage non-blocking exception: {e}")
 
     return report
 
@@ -314,9 +333,8 @@ async def run_kepler_sre_audit(data: Dict[str, Any]) -> Dict[str, Any]:
     if k8s:
         score += 10
 
-    # Dynamic CI Health impact from actions triage
     if actions_triage.get("has_runs") and not ci_passing:
-        score = max(20, score - 15)  # Penalize broken CI on main
+        score = max(20, score - 15)
 
     score = min(100, max(20, score))
 
@@ -349,7 +367,6 @@ async def generate_jarvislabs_review(data: Dict[str, Any]) -> Dict[str, Any]:
     api_key = os.getenv("JARVISLABS_API_KEY", "")
     model_name = os.getenv("JARVISLABS_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash")
 
-    # Safety: Redact credentials from README, issue body, and comments
     clean_readme = redact(github_context.get("readme_snippet", "")[:1000])
     clean_body = redact(github_context.get("issue", {}).get("body", ""))
     clean_title = redact(github_context.get("issue", {}).get("title", ""))
@@ -391,33 +408,41 @@ CI/CD Actions Status: {clean_ci_summary}
 {wrap("file_tree", json.dumps(github_context.get('file_tree', [])[:100]))}
 
 Tailor the response for persona '{use_case}':
-- If 'first_pr': focus on beginner accessibility, pick 2-4 exact files to touch, write clear setup commands, and a polite assignment request comment. Mention CI status if failing so the beginner isn't confused.
+- If 'first_pr': focus on beginner accessibility, pick 2-4 exact files to touch, write clear setup commands, and a polite assignment request comment.
 - If 'sre_ops': emphasize Docker, CI/CD, lockfiles, Kepler operational risks, and GitHub Actions triage findings.
 - If 'maintainer_audit': focus on architecture modularity, code quality, testing gaps, and onboarding clarity.
 """
 
     if api_key:
         try:
-            client = AsyncOpenAI(
-                base_url="https://models.jarvislabs.net/v1",
-                api_key=api_key
-            )
-            response = await client.chat.completions.create(
-                model=model_name,
-                messages=[
+            # Direct HTTP call to Jarvislabs Token Factory (OpenAI-compatible)
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": model_name,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.2,
-                max_tokens=1500
+                "temperature": 0.2,
+                "max_tokens": 1500
+            }
+            resp = requests.post(
+                "https://models.jarvislabs.net/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=45
             )
-            raw_text = response.choices[0].message.content.strip()
-            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-            raw_text = re.sub(r"\s*```$", "", raw_text)
-            parsed = json.loads(raw_text)
-            return parsed
+            if resp.status_code == 200:
+                raw_text = resp.json()["choices"][0]["message"]["content"].strip()
+                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+                raw_text = re.sub(r"\s*```$", "", raw_text)
+                return json.loads(raw_text)
         except Exception as e:
-            activity.logger.warning(f"Jarvislabs API call failed: {e}. Falling back to deterministic synthesis.")
+            if hasattr(activity, "logger"):
+                activity.logger.warning(f"Jarvislabs API call failed: {e}. Falling back to deterministic synthesis.")
 
     # Fallback synthesizer
     files_tree = github_context.get("file_tree", [])
@@ -462,28 +487,24 @@ class GitHubCopilotWorkflow:
         github_url = input_data["github_url"]
         use_case = input_data.get("use_case", "first_pr")
 
-        # Step 1: Fetch GitHub context
         github_context = await workflow.execute_activity(
             fetch_github_context,
             github_url,
             start_to_close_timeout=timedelta(seconds=60)
         )
 
-        # Step 2: Deterministic Traffic Light check
         availability = await workflow.execute_activity(
             check_issue_availability,
             github_context,
             start_to_close_timeout=timedelta(seconds=15)
         )
 
-        # Step 3: Dynamic GitHub Actions Triage (Shubham Londhe pattern)
         actions_triage = await workflow.execute_activity(
             triage_github_actions,
             github_context,
             start_to_close_timeout=timedelta(seconds=25)
         )
 
-        # Step 4: Run Kepler SRE audit (correlating static topology with dynamic CI health)
         kepler_audit = await workflow.execute_activity(
             run_kepler_sre_audit,
             {
@@ -493,7 +514,6 @@ class GitHubCopilotWorkflow:
             start_to_close_timeout=timedelta(seconds=20)
         )
 
-        # Step 5: Jarvislabs Token Factory Review (with secret redaction & untrusted boundaries)
         review = await workflow.execute_activity(
             generate_jarvislabs_review,
             {
@@ -520,6 +540,9 @@ class GitHubCopilotWorkflow:
 # ==========================================
 
 async def main():
+    if Client is None or Worker is None:
+        print("temporalio is not installed. Please run: pip install temporalio")
+        return
     print("Connecting to Temporal Server at localhost:7233...")
     client = await Client.connect("localhost:7233")
     worker = Worker(
