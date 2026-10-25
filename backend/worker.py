@@ -9,6 +9,19 @@ from pydantic import BaseModel, Field
 import requests
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # If dotenv is not installed, parse .env manually if present
+    if os.path.exists(".env"):
+        with open(".env", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+
+try:
     from openai import AsyncOpenAI
 except Exception:
     AsyncOpenAI = None
@@ -364,8 +377,10 @@ async def generate_jarvislabs_review(data: Dict[str, Any]) -> Dict[str, Any]:
     actions_triage = data.get("actions_triage", {})
     use_case = data.get("use_case", "first_pr")
 
-    api_key = os.getenv("JARVISLABS_API_KEY", "")
-    model_name = os.getenv("JARVISLABS_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash")
+    jarvis_key = os.getenv("JARVISLABS_API_KEY", "")
+    gemma_key = os.getenv("GEMMA_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+    jarvis_model = os.getenv("JARVISLABS_MODEL", "deepseek-ai/DeepSeek-V4.1-Flash")
+    gemma_model = os.getenv("GEMMA_MODEL", "gemma-4-31b-it")
 
     clean_readme = redact(github_context.get("readme_snippet", "")[:1000])
     clean_body = redact(github_context.get("issue", {}).get("body", ""))
@@ -413,15 +428,15 @@ Tailor the response for persona '{use_case}':
 - If 'maintainer_audit': focus on architecture modularity, code quality, testing gaps, and onboarding clarity.
 """
 
-    if api_key:
+    # 1. Attempt Jarvislabs Token Factory if configured
+    if jarvis_key:
         try:
-            # Direct HTTP call to Jarvislabs Token Factory (OpenAI-compatible)
             headers = {
-                "Authorization": f"Bearer {api_key}",
+                "Authorization": f"Bearer {jarvis_key}",
                 "Content-Type": "application/json"
             }
             payload = {
-                "model": model_name,
+                "model": jarvis_model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -433,7 +448,7 @@ Tailor the response for persona '{use_case}':
                 "https://models.jarvislabs.net/v1/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=45
+                timeout=30
             )
             if resp.status_code == 200:
                 raw_text = resp.json()["choices"][0]["message"]["content"].strip()
@@ -442,7 +457,37 @@ Tailor the response for persona '{use_case}':
                 return json.loads(raw_text)
         except Exception as e:
             if hasattr(activity, "logger"):
-                activity.logger.warning(f"Jarvislabs API call failed: {e}. Falling back to deterministic synthesis.")
+                activity.logger.warning(f"Jarvislabs API call failed: {e}. Falling back to Gemma / synthesis.")
+
+    # 2. Attempt Google AI Studio (Gemma / Gemini) if configured
+    if gemma_key:
+        try:
+            headers = {
+                "Authorization": f"Bearer {gemma_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": gemma_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.2
+            }
+            resp = requests.post(
+                "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=15
+            )
+            if resp.status_code == 200:
+                raw_text = resp.json()["choices"][0]["message"]["content"].strip()
+                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+                raw_text = re.sub(r"\s*```$", "", raw_text)
+                return json.loads(raw_text)
+        except Exception as e:
+            if hasattr(activity, "logger"):
+                activity.logger.warning(f"Gemma API call failed: {e}. Falling back to deterministic synthesis.")
 
     # Fallback synthesizer
     files_tree = github_context.get("file_tree", [])
