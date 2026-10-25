@@ -1,6 +1,6 @@
 # 🚀 First PR & Repo Copilot
 
-> **AI-Powered Chrome Extension & SRE Copilot for GitHub Contributors, DevOps Engineers, and Maintainers.**  
+> **AI-Powered Chrome Extension & Autonomous SRE Copilot for GitHub Contributors, DevOps Engineers, and Maintainers.**  
 > Built with **Temporal**, **Jarvislabs Token Factory**, and **Kepler SRE IDE by RubixKube**, integrated with **`github-actions-ai-agent`**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -13,45 +13,58 @@
 
 ---
 
-## 📌 Executive Summary & Problem Solved
+## 📌 Executive Summary
 
-Hacktoberfest and open-source programs bring thousands of eager first-time contributors to GitHub, but the majority abandon their efforts before opening their first Pull Request:
-1. **Ghost & Claimed Issues:** Contributors waste days writing code for issues that were already claimed inside obscure comment threads.
-2. **Context Overload:** Repositories have hundreds of files; newcomers have no idea which 2–3 files actually need editing.
-3. **Silent CI Regressions:** When tests on `main` fail due to upstream regressions, beginners assume their local setup is broken.
+Every year, Hacktoberfest and open-source initiatives attract thousands of aspiring developers, yet over **70% of first-time contributors drop out** before opening their first pull request. 
+
+### The 3 Core Friction Points
+1. **Ghost & Claimed Issues:** Contributors spend hours or days solving an issue, only to discover it was already claimed in deep comment threads.
+2. **Context Overload:** Complex codebases contain hundreds of files with no clear starting point for newcomers.
+3. **Silent CI Regressions:** When tests on `main` fail due to upstream regressions, beginners assume their local environment is broken and give up.
 
 **First PR & Repo Copilot** provides an in-browser mission control that reviews any GitHub repository or issue in seconds:
-- 🟢 **Deterministic Traffic Light Engine:** Plain-code rules check whether an issue is truly open (`GREEN`), claimed in comments (`AMBER`), or assigned/closed (`RED`).
-- 🛡️ **Kepler SRE IDE by RubixKube:** Audits operational topology (`Dockerfile`, CI/CD, Helm/K8s, tests, lockfiles), calculates blast radius, and computes an **SRE Readiness Score (0–100)**.
-- ⚡ **Dynamic CI/CD Triage (`github-actions-ai-agent`):** Queries live GitHub Actions runs, pinpoints broken steps (e.g. `npm test`), and masks secrets with prompt trust boundaries.
-- 🧠 **Jarvislabs Token Factory LLM:** Pinpoints exact files to edit, extracts setup commands, formulates an action plan, and drafts a polite *"Can I be assigned?"* comment.
-- 🔄 **Temporal Durable Execution:** A 5-activity workflow that survives mid-scan worker crashes and network interruptions.
+- 🟢 **Deterministic Traffic Light Engine:** High-speed plain-code rules detect if an issue is truly open (`GREEN`), claimed in comments (`AMBER`), or assigned/closed (`RED`).
+- 🛡️ **Kepler SRE IDE by RubixKube:** Audits operational topology (`Dockerfile`, CI/CD, Helm/K8s, tests, lockfiles) and calculates an **SRE Readiness Score (0–100)**.
+- ⚡ **Dynamic CI/CD Triage (`github-actions-ai-agent`):** Diagnoses recent GitHub Actions runs, isolates broken steps, and redacts sensitive credentials.
+- 🧠 **Jarvislabs Token Factory LLM:** Identifies the exact 2–4 files to edit, extracts setup commands, generates a numbered action plan, and drafts a polite *"Can I be assigned?"* comment.
+- 🔄 **Temporal Durable Execution:** A fault-tolerant 5-activity workflow that survives worker restarts mid-flight without re-fetching GitHub data.
 
 ---
 
 ## 🏆 The 3 Mandatory Sponsor Integrations
 
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       FIRST PR & REPO COPILOT PIPELINE                      │
+├───────────────────────────────┬─────────────────────────────────────────────┤
+│ 1. Durable Orchestration      │ TEMPORAL CLUSTER (localhost:7233 / 8233)     │
+│ 2. Core Intelligence Layer    │ JARVISLABS TOKEN FACTORY (DeepSeek / Gemma) │
+│ 3. SRE & Blast Radius Layer   │ KEPLER SRE IDE BY RUBIXKUBE (Rubix CLI)     │
+└───────────────────────────────┴─────────────────────────────────────────────┘
+```
+
 ### 1. 🔄 Temporal (Durable Orchestration Layer)
-* **What it does:** Orchestrates the entire multi-step analysis pipeline as independent, retryable Temporal Activities.
-* **Why it matters:** Unlike standard API gateways that drop in-flight requests during server restarts or timeouts, Temporal logs activity inputs and return values in an immutable event history.
-* **The Live Worker Crash Demo:** During judging, we trigger a scan, kill `worker.py` (`Ctrl+C`) mid-flight, show `http://localhost:8233` holding state after GitHub fetching, and restart `worker.py` to resume execution without re-fetching GitHub data or wasting rate limits!
+* **What it does:** Orchestrates the multi-activity analysis pipeline (`fetch_github_context`, `check_issue_availability`, `triage_github_actions`, `run_kepler_sre_audit`, `generate_jarvislabs_review`).
+* **Why it matters:** Unlike fragile HTTP chains that drop in-flight scans if interrupted, Temporal records every activity input and result in an immutable event history.
+* **The Live Worker Crash Demo:** During judging, we initiate a scan, kill `worker.py` (`Ctrl+C`) mid-flight, show the Temporal Web UI (`http://localhost:8233`) holding state, and restart `worker.py`—the workflow resumes automatically from the exact point of interruption without re-hitting GitHub rate limits!
 
 ### 2. 🧠 Jarvislabs Token Factory (Core Intelligence Layer)
-* **What it does:** Hosts open-model LLMs (`DeepSeek V4.1 Flash`, `GLM-5.3 Flash`, `Qwen 3.8 27B FP8`, `Gemma 4 31B IT`) via an OpenAI-compatible Chat Completions API (`https://models.jarvislabs.net/v1`).
-* **Why it matters:** Ingests repository file structures, README context, Traffic Light availability signals, and Kepler SRE audit results to synthesize a strictly structured JSON review with zero hallucination.
+* **What it does:** Provides high-throughput hosted open-model intelligence via an OpenAI-compatible Chat Completions API (`https://models.jarvislabs.net/v1`).
+* **Models Supported:** `DeepSeek-V4.1-Flash`, `GLM-5.3-Flash`, `Qwen-3.8-27B-FP8`, and `Gemma-4-31B-IT` (with optional Google AI Studio fallback).
+* **Role in Copilot:** Consumes repository file trees, README snippets, availability signals, and Kepler SRE metrics to output strict JSON containing personalized action plans, setup commands, and file recommendations.
 
 ### 3. 🛡️ Kepler SRE IDE by RubixKube (Operational Readiness Layer)
-* **CRITICAL DISTINCTION:** This is **Kepler by RubixKube** (the desktop AI SRE IDE / Rubix CLI for operational readiness and blast-radius analysis), **NOT** the unrelated CNCF container power-monitoring tool.
-* **What it does:** Operates as an automated SRE subagent (`run_kepler_sre_audit`) inspecting repository infrastructure manifests (`Dockerfile`, `.github/workflows/`, Helm charts, Kubernetes manifests, lockfiles) to identify deployment gaps and compute the `sre_readiness_score`.
+* **CRITICAL DISTINCTION:** This is **Kepler by RubixKube** (the desktop AI SRE IDE and operational agent layer paired with `Rubix CLI`), **NOT** the unrelated CNCF Kubernetes power consumption exporter.
+* **What it does:** Serves as our automated SRE subagent (`run_kepler_sre_audit`), inspecting repository infrastructure manifests (`Dockerfile`, `.github/workflows/`, Helm charts, Kubernetes manifests, dependency lockfiles) to evaluate local setup risks and compute the `sre_readiness_score`.
 
 ---
 
-## ⚡ Shubham Londhe's `github-actions-ai-agent` Integration
+## ⚡ Dynamic CI/CD Triage (`github-actions-ai-agent`)
 
-We augmented our pipeline with production patterns from [LondheShubham153/github-actions-ai-agent](https://github.com/LondheShubham153/github-actions-ai-agent):
-- **Live Actions Run Triage (`triage_github_actions`):** Directly queries `/actions/runs` to detect if `main` branch CI is currently broken, isolating the failed job and step.
-- **Enterprise Security & Redaction (`safety.py`):** Automatically scrubs GitHub tokens (`ghp_`), AWS keys, and secrets from issues, comments, and READMEs before LLM ingestion.
-- **Untrusted Prompt Boundaries:** Wraps external repository content in `<untrusted_github_context>` tags to defend against prompt injection attacks.
+Integrated from [LondheShubham153/github-actions-ai-agent](https://github.com/LondheShubham153/github-actions-ai-agent) by Shubham Londhe:
+- **Live Actions Run Triage (`triage_github_actions`):** Queries `/actions/runs?per_page=5` to detect if tests on `main` are currently passing or failing, extracting the failed job and step (e.g., `npm test`, `pytest`).
+- **Security Trust Boundaries (`safety.py`):** Automatically scrubs GitHub tokens (`ghp_`), AWS credentials, Bearer tokens, and secrets from issues, comments, and READMEs.
+- **Untrusted Prompt Encapsulation:** Wraps external user-supplied text inside `<untrusted_github_context>` tags to defend against prompt injection and jailbreak attacks.
 
 ---
 
@@ -66,6 +79,7 @@ graph TD
 
     subgraph API Gateway Layer
         API["FastAPI Gateway (server.py)<br/>Port 8000 | CORS Enabled"]
+        CACHE["10-Minute Scan Cache<br/>(Zero Duplicate Quota Usage)"]
     end
 
     subgraph Orchestration Layer
@@ -92,6 +106,7 @@ graph TD
 
     EXT -->|POST /analyze| API
     WEB -->|POST /analyze| API
+    API --> CACHE
     API --> TC
     TC -->|ExecuteWorkflow| TS
     TS --> TQ
@@ -107,17 +122,51 @@ graph TD
 
 ---
 
-## 🎨 Chrome Extension (Manifest V3)
+## 🎨 Chrome Extension Interface (Manifest V3)
 
-The extension features a Figma-designed **Neobrutalist "OSS MISSION CONTROL"** theme:
-- ☾ / ☀ **Cyberpunk Light/Dark Mode Toggle**
-- 🚦 **Striped Traffic Light Availability Banner** (`[STATUS: OPEN TO TAKE]`)
-- 📊 **3-Score Card Grid** (`STRUCTURE`, `BEGINNER_FRIENDLY`, `KEPLER_SRE`)
-- 📂 **Target Files Module** (pinpointing exactly which files to edit)
-- 💻 **Shell Terminal Box** (copyable setup commands with simulated test metrics)
-- 📋 **Numbered Action Plan** (~20 min estimated resolution time)
-- 🛡️ **Kepler SRE Audit Signals** (`[✓ DOCKER]`, `[✓ CI/CD]`, `[✗ K8S]`)
-- 💬 **Ready-to-Post Issue Comment** with one-click copy (`⌘C`)
+The extension UI is crafted in a Figma-designed **Neobrutalist "OSS MISSION CONTROL"** aesthetic:
+
+```
+┌────────────────────────────────────────────────────────┐
+│ OSS MISSION CONTROL / 001                         [☾]  │
+│ FIRST PR // COPILOT                                    │
+│ [JARVISLABS]   [TEMPORAL]   [KEPLER_SRE]               │
+├────────────────────────────────────────────────────────┤
+│ > https://github.com/himanshu-anonymous/mauji-1        │
+│ [ FIRST PR ▼ ]                          [SCAN REPO ↗]  │
+├────────────────────────────────────────────────────────┤
+│ ▓▓▓ [STATUS: OPEN TO TAKE]                             │
+│     // NO CLAIMS DETECTED                        [●]   │
+├────────────────────────────────────────────────────────┤
+│ ┌───────────────┐  ┌───────────────┐  ┌──────────────┐ │
+│ │ 85/100        │  │ 80/100        │  │ 85/100       │ │
+│ │ STRUCTURE     │  │ BEGINNER_FRND │  │ KEPLER_SRE   │ │
+│ └───────────────┘  └───────────────┘  └──────────────┘ │
+├────────────────────────────────────────────────────────┤
+│ 01 FILES TO INSPECT (3 FILES)                          │
+│ ↳ backend/worker.py — Temporal workflow & activities   │
+│ ↳ backend/server.py — FastAPI gateway & endpoints      │
+├────────────────────────────────────────────────────────┤
+│ 02 TERMINAL RUN                                        │
+│ $ git clone https://github.com/owner/repo.git   [COPY] │
+│ ✓ 12 checks passed in 0.82s                            │
+├────────────────────────────────────────────────────────┤
+│ 03 ACTION PLAN (~20 MIN)                               │
+│ 01 Fork repository and create a feature branch         │
+│ 02 Review target files and implement changes           │
+│ 03 Open pull request with descriptive test notes       │
+├────────────────────────────────────────────────────────┤
+│ KEPLER SRE AUDIT: 85%                                  │
+│ [✓ DOCKER]   [✓ CI/CD]   [✗ K8S]                       │
+│ PRODUCTION SIGNAL: STRONG // TOPOLOGY AUDITED          │
+├────────────────────────────────────────────────────────┤
+│ 04 POLITE COMMENT                         [COPY] [⌘C]  │
+│ "Hi! I noticed this issue is unassigned. I've reviewed │
+│  the files and would love to submit a PR for this..."   │
+├────────────────────────────────────────────────────────┤
+│ PR_COPILOT v1.0.4                     ● SYSTEM ONLINE  │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -125,11 +174,11 @@ The extension features a Figma-designed **Neobrutalist "OSS MISSION CONTROL"** t
 
 ```text
 mauji/
-├── README.md               # Complete documentation & pitch guide
+├── README.md               # Complete project documentation & pitch guide
 ├── context.md              # Team & AI assistant single source of truth
 ├── requirements.txt        # Backend dependencies
 ├── .gitignore              # Git ignore rules
-├── .env                    # Local secrets (API keys) - Git-ignored
+├── .env                    # Local secrets (API keys) - strictly Git-ignored
 │
 ├── backend/
 │   ├── server.py           # FastAPI REST API (Sync /analyze, Quick Check, Async Workflow)
@@ -138,7 +187,7 @@ mauji/
 ├── extension/              # Chrome Extension (Manifest V3)
 │   ├── manifest.json       # Extension configuration (activeTab, permissions)
 │   ├── popup.html          # Neobrutalist Mission Control UI
-│   └── popup.js            # Auto tab URL detection & backend integration
+│   └── popup.js            # Resilient API communication & tab detection
 │
 └── frontend/               # React 19 + Tailwind CSS v4 + Vite Web App
     ├── package.json
@@ -178,11 +227,11 @@ GEMMA_API_KEY="AQ.xxx"
 pip install -r requirements.txt
 ```
 
-### 4. Start the Temporal Server
+### 4. Start the Temporal Dev Server
 ```bash
 temporal server start-dev
 ```
-*Open Web UI at: [http://localhost:8233](http://localhost:8233)*
+*Web UI available at: [http://localhost:8233](http://localhost:8233)*
 
 ### 5. Start the Temporal Worker
 In Terminal 1:
@@ -201,76 +250,25 @@ python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000 --reload
 1. Open Google Chrome and navigate to `chrome://extensions/`.
 2. Enable **Developer mode** (top-right toggle).
 3. Click **Load unpacked** and select the [`extension/`](./extension) directory.
-4. Open any GitHub repository or issue, click the extension icon, and hit **SCAN REPO ↗**!
+4. Navigate to any GitHub repository or issue, click the extension icon, and hit **SCAN REPO ↗**!
 
 ---
 
-## 📡 Backend API Contract
+## 📡 Backend API Endpoints
 
-### Synchronous Scan: `POST http://127.0.0.1:8000/analyze`
-```json
-{
-  "github_url": "https://github.com/owner/repo/issues/42",
-  "use_case": "first_pr"
-}
-```
-
-### Response (`200 OK`):
-```json
-{
-  "repo": "owner/repo",
-  "total_files_scanned": 142,
-  "availability": {
-    "status": "GREEN",
-    "badge": "OPEN TO TAKE",
-    "reason": "Unassigned, open, and no claiming comments detected!"
-  },
-  "kepler_audit": {
-    "sre_readiness_score": 85,
-    "engine": "Kepler SRE Subagent Active (Static Repo Topology + Dynamic CI Health)",
-    "signals": {
-      "containerized": true,
-      "ci_cd_pipelines": true,
-      "k8s_manifests": false,
-      "test_suite_present": true,
-      "dependency_manifest": true,
-      "ci_runs_passing": true
-    }
-  },
-  "review": {
-    "overall_repo_score": 84,
-    "score_breakdown": {
-      "structure_score": 88,
-      "beginner_friendliness": 80,
-      "sre_infra_score": 85
-    },
-    "two_sentence_summary": "Plain-English explanation of what this issue requires.",
-    "files_to_inspect": [
-      {
-        "path": "src/api/routes.py",
-        "why": "Contains the endpoint handler mentioned in the issue description."
-      }
-    ],
-    "setup_commands": [
-      "git clone https://github.com/owner/repo.git",
-      "pip install -r requirements.txt"
-    ],
-    "personalized_action_plan": [
-      "Fork the repository and create a branch named fix/issue-42.",
-      "Update src/api/routes.py to handle empty query parameters.",
-      "Run pytest to verify no regressions."
-    ],
-    "kepler_sre_insight": "CI workflows and Dockerfile are present; recent Actions run succeeded on main branch.",
-    "ready_to_post_comment": "Hi! I noticed this issue is unassigned. I've reviewed src/api/routes.py and would love to submit a PR for this—could you please assign it to me?"
-  }
-}
-```
+| Endpoint | Method | Latency | Target Consumer | Purpose |
+|---|---|---|---|---|
+| `/health` | `GET` | `<10ms` | Internal / Monitor | Verifies gateway and Temporal orchestration state |
+| `/quick-check` | `GET` | `<150ms` | Content Script (`content.js`) | Instant Traffic Light check without LLM overhead |
+| `/analyze` | `POST` | `3–5s` | Popup (`popup.js`) | Full synchronous audit (Scores, Kepler SRE, Plan) |
+| `/workflow/start` | `POST` | `<50ms` | Service Worker (`background.js`) | Starts background workflow; returns `workflow_id` |
+| `/workflow/status/{id}` | `GET` | `<20ms` | Service Worker (`background.js`) | Polls background scan progress or retrieves cached result |
 
 ---
 
 ## 🎭 Reviewer Personas
 
-- **First-Time Contributor (`first_pr`):** Prioritizes beginner accessibility, picks the exact 2–4 files to touch, extracts setup commands, and drafts a polite assignment request comment.
+- **First-Time Contributor (`first_pr`):** Focuses on beginner accessibility, picks the easiest 2–4 files to edit, extracts setup commands, and drafts a polite assignment request comment.
 - **SRE / DevOps Audit (`sre_ops`):** Evaluates `Dockerfile` hygiene, CI/CD pipeline coverage, Kubernetes/Helm manifests, lockfiles, and blast radius.
 - **Maintainer / Auditor (`maintainer_audit`):** Focuses on directory modularity, onboarding friction, documentation gaps, and test coverage.
 
@@ -288,6 +286,8 @@ python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000 --reload
 
 ---
 
-## 👥 Contributors & Acknowledgements
-- Developed for Hackathon & Open Source Mission Control.
-- Special thanks to **Jarvislabs**, **Temporal**, and **RubixKube (Kepler SRE IDE)** for sponsor APIs and architecture patterns.
+## 👥 Acknowledgements
+- **Jarvislabs Token Factory**: High-performance open-model completions infrastructure.
+- **Temporal**: Durable workflow execution engine and state durability.
+- **RubixKube (Kepler SRE IDE)**: SRE readiness analysis and operational topology tooling.
+- **Shubham Londhe**: Architectural patterns from `github-actions-ai-agent`.
