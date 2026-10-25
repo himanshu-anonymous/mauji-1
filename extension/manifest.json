@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "First PR & Repo Copilot",
+  "version": "1.0.0",
+  "description": "Chrome extension reviewing GitHub repos and issues with Traffic-Light availability, Kepler SRE audits, and Jarvislabs AI.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://github.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "First PR & Repo Copilot"
+  }
+}

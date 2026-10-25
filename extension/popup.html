@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>First PR & Repo Copilot</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    body {
+      width: 440px;
+      min-height: 520px;
+      background-color: #0d1117;
+      color: #c9d1d9;
+      padding: 16px;
+      font-size: 13px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand svg {
+      fill: #f0f6fc;
+    }
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+    .badge-temporal {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 12px;
+      background: #7c3aed22;
+      color: #a78bfa;
+      border: 1px solid #7c3aed55;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8b949e;
+      margin-bottom: 5px;
+    }
+    input, select {
+      width: 100%;
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      color: #f0f6fc;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #58a6ff;
+    }
+    .btn-scan {
+      width: 100%;
+      background-color: #238636;
+      color: #ffffff;
+      border: none;
+      padding: 9px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-scan:hover {
+      background-color: #2ea043;
+    }
+    .btn-scan:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .spinner {
+      border: 2px solid #ffffff44;
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #error-container {
+      display: none;
+      background-color: #da363322;
+      border: 1px solid #da363388;
+      color: #f85149;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    #results {
+      display: none;
+      margin-top: 14px;
+    }
+    .card {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    /* Traffic Light */
+    .traffic-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .traffic-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .traffic-GREEN {
+      background-color: #23863633;
+      color: #3fb950;
+      border: 1px solid #238636;
+    }
+    .traffic-AMBER {
+      background-color: #d2992233;
+      color: #e3b341;
+      border: 1px solid #d29922;
+    }
+    .traffic-RED {
+      background-color: #da363333;
+      color: #f85149;
+      border: 1px solid #da3633;
+    }
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .score-box {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .score-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: #58a6ff;
+    }
+    .score-title {
+      font-size: 10px;
+      color: #8b949e;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f0f6fc;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .signal-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .sig-pill {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #8b949e;
+    }
+    .sig-pill.active {
+      color: #3fb950;
+      border-color: #23863655;
+      background: #2386361a;
+    }
+    .file-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 12px;
+    }
+    .file-item:last-child {
+      border-bottom: none;
+    }
+    .file-path {
+      font-family: monospace;
+      color: #58a6ff;
+      font-size: 11px;
+    }
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #79c0ff;
+      margin-top: 4px;
+      overflow-x: auto;
+    }
+    .checklist {
+      list-style-type: decimal;
+      padding-left: 18px;
+    }
+    .checklist li {
+      margin-bottom: 5px;
+      line-height: 1.35;
+    }
+    .comment-area {
+      position: relative;
+    }
+    .comment-text {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #c9d1d9;
+      margin-top: 6px;
+      user-select: all;
+    }
+    .btn-copy {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .btn-copy:hover {
+      background: #30363d;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <svg height="20" width="20" viewBox="0 0 16 16">
+        <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+      </svg>
+      <h1>First PR & Repo Copilot</h1>
+    </div>
+    <span class="badge-temporal">Temporal Powered</span>
+  </header>
+
+  <div class="form-group">
+    <label for="github-url">Target Repository or Issue URL</label>
+    <input type="text" id="github-url" placeholder="https://github.com/owner/repo or .../issues/42">
+  </div>
+
+  <div class="form-group">
+    <label for="use-case">Reviewer Persona</label>
+    <select id="use-case">
+      <option value="first_pr">First-Time Contributor (Hacktoberfest)</option>
+      <option value="sre_ops">SRE / DevOps Audit (Kepler Mode)</option>
+      <option value="maintainer_audit">Maintainer / Code Auditor</option>
+    </select>
+  </div>
+
+  <button class="btn-scan" id="btn-scan">
+    <span class="spinner" id="spinner"></span>
+    <span id="btn-text">Scan Codebase</span>
+  </button>
+
+  <div id="error-container"></div>
+
+  <!-- Results Section -->
+  <div id="results">
+
+    <!-- Traffic Light Availability -->
+    <div class="card traffic-card">
+      <div>
+        <div style="font-size: 11px; color: #8b949e;">ISSUE AVAILABILITY</div>
+        <div id="avail-reason" style="margin-top: 3px; font-size: 12px;"></div>
+      </div>
+      <div id="avail-badge" class="traffic-pill"></div>
+    </div>
+
+    <!-- Scores Grid -->
+    <div class="scores-grid">
+      <div class="score-box">
+        <div class="score-val" id="score-overall">--</div>
+        <div class="score-title">Overall Score</div>
+      </div>
+      <div class="score-box">
+        <div class="score-val" id="score-structure">--</div>
+        <div class="score-title">Structure</div>
+      </div>
+      <div class="score-box">
+        <div class="score-val" id="score-sre">--</div>
+        <div class="score-title">Kepler SRE</div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <div class="section-title">Summary & Objective</div>
+      <div id="summary-text" style="line-height: 1.4;"></div>
+    </div>
+
+    <!-- Kepler SRE & Actions CI -->
+    <div class="card">
+      <div class="section-title">
+        <span>Kepler SRE & CI/CD Health</span>
+      </div>
+      <div id="kepler-insight" style="font-size: 11px; line-height: 1.4; color: #8b949e;"></div>
+      <div class="signal-pills" id="signal-pills"></div>
+    </div>
+
+    <!-- Files to Inspect -->
+    <div class="card">
+      <div class="section-title">Files to Touch & Inspect</div>
+      <div id="files-list"></div>
+    </div>
+
+    <!-- Setup Commands -->
+    <div class="card">
+      <div class="section-title">Quickstart Setup Commands</div>
+      <div id="setup-commands"></div>
+    </div>
+
+    <!-- Personalized Action Plan -->
+    <div class="card">
+      <div class="section-title">Personalized Action Plan</div>
+      <ol class="checklist" id="action-plan"></ol>
+    </div>
+
+    <!-- Ready to Post Comment -->
+    <div class="card comment-area">
+      <div class="section-title">Ready-to-Post Issue Comment</div>
+      <button class="btn-copy" id="btn-copy-comment">Copy</button>
+      <div class="comment-text" id="comment-text"></div>
+    </div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
