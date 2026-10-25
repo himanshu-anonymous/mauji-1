@@ -1,0 +1,10 @@
+{
+  "description": "Helps developers assess GitHub issues for availability, difficulty, files to edit, and next steps so they can confidently make their first contribution.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

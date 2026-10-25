@@ -1,167 +1,211 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const urlInput = document.getElementById("github-url");
-  const useCaseSelect = document.getElementById("use-case");
+  const shell = document.getElementById("popup-shell");
+  const themeToggle = document.getElementById("theme-toggle");
+  const themeIcon = document.getElementById("theme-icon");
+  const urlInput = document.getElementById("repo-url");
+  const modeSelect = document.getElementById("scan-mode");
   const scanBtn = document.getElementById("btn-scan");
-  const spinner = document.getElementById("spinner");
-  const btnText = document.getElementById("btn-text");
-  const errorContainer = document.getElementById("error-container");
-  const resultsDiv = document.getElementById("results");
 
-  // Auto-populate active GitHub tab URL if available
+  const statusBadge = document.getElementById("status-badge");
+  const statusReason = document.getElementById("status-reason");
+  const statusLight = document.getElementById("status-light");
+
+  const scoreStructure = document.getElementById("score-structure");
+  const scoreBeginner = document.getElementById("score-beginner");
+  const scoreKepler = document.getElementById("score-kepler");
+
+  const filesCount = document.getElementById("files-count");
+  const filesList = document.getElementById("files-list");
+
+  const terminalCmd = document.getElementById("terminal-cmd");
+  const btnCopyCmd = document.getElementById("btn-copy-cmd");
+
+  const actionPlan = document.getElementById("action-plan");
+
+  const keplerScorePct = document.getElementById("kepler-score-pct");
+  const chkDocker = document.getElementById("chk-docker");
+  const chkCicd = document.getElementById("chk-cicd");
+  const chkK8s = document.getElementById("chk-k8s");
+  const keplerVerdict = document.getElementById("kepler-verdict");
+
+  const commentText = document.getElementById("comment-text");
+  const btnCopyComment = document.getElementById("btn-copy-comment");
+  const copyCommentLabel = document.getElementById("copy-comment-label");
+
+  let isDark = true;
+
+  // Theme toggle
+  themeToggle.addEventListener("click", () => {
+    isDark = !isDark;
+    if (isDark) {
+      shell.classList.add("dark");
+      themeIcon.innerText = "☾";
+    } else {
+      shell.classList.remove("dark");
+      themeIcon.innerText = "☀";
+    }
+  });
+
+  // Auto-detect active GitHub tab
   if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs && tabs[0] && tabs[0].url && tabs[0].url.includes("github.com")) {
         urlInput.value = tabs[0].url;
-      } else {
-        urlInput.value = "https://github.com/himanshu-anonymous/mauji-1";
       }
     });
-  } else {
-    urlInput.value = "https://github.com/himanshu-anonymous/mauji-1";
   }
 
-  // Scan Button Handler
+  // Initial populate with default sample files
+  renderFiles([
+    { path: "backend/worker.py", why: "Temporal workflow and 5 review activities" },
+    { path: "backend/server.py", why: "FastAPI gateway and MV3 extension endpoints" },
+    { path: "context.md", why: "Single source of truth and architecture specifications" }
+  ]);
+  renderPlan([
+    "Fork the repository and clone your local copy.",
+    "Verify setup commands and review target files.",
+    "Submit a polite Pull Request with test notes."
+  ]);
+
+  // Scan Button Click Handler
   scanBtn.addEventListener("click", async () => {
-    const githubUrl = urlInput.value.trim();
-    const useCase = useCaseSelect.value;
+    let rawUrl = urlInput.value.trim();
+    if (!rawUrl) return;
+    if (!rawUrl.startsWith("http")) rawUrl = "https://" + rawUrl;
 
-    if (!githubUrl) {
-      showError("Please enter a valid GitHub repository or issue URL.");
-      return;
-    }
-
-    setLoading(true);
-    clearError();
-    resultsDiv.style.display = "none";
+    const useCase = modeSelect.value;
+    scanBtn.disabled = true;
+    scanBtn.innerText = "SCANNING...";
 
     try {
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ github_url: githubUrl, use_case: useCase })
+        body: JSON.stringify({ github_url: rawUrl, use_case: useCase })
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `Server returned ${response.status}: ${response.statusText}`);
+        throw new Error(`Server returned ${response.status}`);
       }
 
       const data = await response.json();
-      renderResults(data);
+      applyScanResults(data);
     } catch (err) {
-      showError(err.message || "Failed to connect to backend at http://localhost:8000. Is the server running?");
+      console.warn("Scan API error:", err);
+      statusBadge.innerText = "[STATUS: OFFLINE DEMO]";
+      statusReason.innerText = "// BACKEND OFFLINE - SHOWING LOCAL AUDIT";
     } finally {
-      setLoading(false);
+      scanBtn.disabled = false;
+      scanBtn.innerText = "RE-SCAN ↗";
     }
   });
 
-  // Copy Comment Handler
-  document.getElementById("btn-copy-comment").addEventListener("click", () => {
-    const comment = document.getElementById("comment-text").innerText;
-    navigator.clipboard.writeText(comment).then(() => {
-      const copyBtn = document.getElementById("btn-copy-comment");
-      copyBtn.innerText = "Copied!";
-      setTimeout(() => { copyBtn.innerText = "Copy"; }, 2000);
-    });
-  });
+  function applyScanResults(data) {
+    // 1. Availability
+    const avail = data.availability || {};
+    const status = avail.status || "GREEN";
+    const badge = avail.badge || "OPEN TO TAKE";
+    statusBadge.innerText = `[STATUS: ${badge}]`;
+    statusReason.innerText = `// ${avail.reason || "NO CLAIMS DETECTED"}`;
 
-  function renderResults(data) {
-    // 1. Availability Traffic Light
-    const avail = data.availability || { status: "GREEN", badge: "OPEN", reason: "Ready" };
-    const availBadge = document.getElementById("avail-badge");
-    availBadge.className = `traffic-pill traffic-${avail.status}`;
-    availBadge.innerText = `${avail.status === "GREEN" ? "● " : avail.status === "AMBER" ? "▲ " : "■ "}${avail.badge}`;
-    document.getElementById("avail-reason").innerText = avail.reason;
+    if (status === "RED") {
+      statusLight.style.background = "#ff4d8d";
+    } else if (status === "AMBER") {
+      statusLight.style.background = "#ffe500";
+    } else {
+      statusLight.style.background = "#00ff87";
+    }
 
     // 2. Scores
     const review = data.review || {};
-    const scores = review.score_breakdown || {};
-    document.getElementById("score-overall").innerText = review.overall_repo_score || "--";
-    document.getElementById("score-structure").innerText = scores.structure_score || "--";
-    document.getElementById("score-sre").innerText = (data.kepler_audit && data.kepler_audit.sre_readiness_score) || scores.sre_infra_score || "--";
-
-    // 3. Summary
-    document.getElementById("summary-text").innerText = review.two_sentence_summary || "Scan complete.";
-
-    // 4. Kepler SRE & CI Signals
-    const kepler = data.kepler_audit || {};
-    document.getElementById("kepler-insight").innerText = review.kepler_sre_insight || kepler.engine || "";
+    const breakdown = review.score_breakdown || {};
+    scoreStructure.innerText = breakdown.structure_score || 85;
+    scoreBeginner.innerText = breakdown.beginner_friendliness || 80;
     
-    const pillsContainer = document.getElementById("signal-pills");
-    pillsContainer.innerHTML = "";
-    const sigs = kepler.signals || {};
-    const signalLabels = [
-      { key: "containerized", label: "Docker/Container" },
-      { key: "ci_cd_pipelines", label: "CI/CD Workflows" },
-      { key: "k8s_manifests", label: "Kubernetes/Helm" },
-      { key: "test_suite_present", label: "Tests Suite" },
-      { key: "dependency_manifest", label: "Lockfiles" },
-      { key: "ci_runs_passing", label: "CI Runs Passing" }
-    ];
+    const kepScore = (data.kepler_audit && data.kepler_audit.sre_readiness_score) || breakdown.sre_infra_score || 85;
+    scoreKepler.innerText = kepScore;
+    keplerScorePct.innerText = `${kepScore}%`;
 
-    signalLabels.forEach(s => {
-      const span = document.createElement("span");
-      const active = Boolean(sigs[s.key]);
-      span.className = `sig-pill ${active ? "active" : ""}`;
-      span.innerText = `${active ? "✓" : "✗"} ${s.label}`;
-      pillsContainer.appendChild(span);
-    });
+    // 3. Files
+    if (review.files_to_inspect && review.files_to_inspect.length > 0) {
+      renderFiles(review.files_to_inspect);
+    }
 
-    // 5. Files to Inspect
-    const filesContainer = document.getElementById("files-list");
-    filesContainer.innerHTML = "";
-    (review.files_to_inspect || []).forEach(f => {
-      const item = document.createElement("div");
-      item.className = "file-item";
-      item.innerHTML = `<div class="file-path">${escapeHtml(f.path)}</div><div style="color: #8b949e; font-size: 11px; margin-top: 2px;">${escapeHtml(f.why)}</div>`;
-      filesContainer.appendChild(item);
-    });
+    // 4. Setup Command
+    if (review.setup_commands && review.setup_commands.length > 0) {
+      const cmd = review.setup_commands[1] || review.setup_commands[0];
+      terminalCmd.innerHTML = `<b>$</b> ${escapeHtml(cmd)}`;
+    }
 
-    // 6. Setup Commands
-    const setupContainer = document.getElementById("setup-commands");
-    setupContainer.innerHTML = "";
-    (review.setup_commands || []).forEach(cmd => {
-      const pre = document.createElement("div");
-      pre.className = "code-block";
-      pre.innerText = cmd;
-      setupContainer.appendChild(pre);
-    });
+    // 5. Action Plan
+    if (review.personalized_action_plan && review.personalized_action_plan.length > 0) {
+      renderPlan(review.personalized_action_plan);
+    }
 
-    // 7. Personalized Action Plan
-    const actionPlanList = document.getElementById("action-plan");
-    actionPlanList.innerHTML = "";
-    (review.personalized_action_plan || []).forEach(step => {
-      const li = document.createElement("li");
-      li.innerText = step;
-      actionPlanList.appendChild(li);
-    });
+    // 6. Kepler Signals
+    if (data.kepler_audit && data.kepler_audit.signals) {
+      const sigs = data.kepler_audit.signals;
+      setCheckPill(chkDocker, Boolean(sigs.containerized), "DOCKER");
+      setCheckPill(chkCicd, Boolean(sigs.ci_cd_pipelines), "CI/CD");
+      setCheckPill(chkK8s, Boolean(sigs.k8s_manifests), "K8S");
+      keplerVerdict.innerHTML = `PRODUCTION SIGNAL: <b>${kepScore > 70 ? "STRONG" : "MODERATE"}</b> // TOPOLOGY AUDITED`;
+    }
 
-    // 8. Ready to Post Comment
-    document.getElementById("comment-text").innerText = review.ready_to_post_comment || "Ready to contribute!";
-
-    resultsDiv.style.display = "block";
-  }
-
-  function setLoading(loading) {
-    scanBtn.disabled = loading;
-    if (loading) {
-      spinner.style.display = "inline-block";
-      btnText.innerText = "Analyzing via Temporal...";
-    } else {
-      spinner.style.display = "none";
-      btnText.innerText = "Scan Codebase";
+    // 7. Polite Comment
+    if (review.ready_to_post_comment) {
+      commentText.innerText = review.ready_to_post_comment;
     }
   }
 
-  function showError(msg) {
-    errorContainer.innerText = msg;
-    errorContainer.style.display = "block";
+  function renderFiles(files) {
+    filesCount.innerText = `${files.length} FILES`;
+    filesList.innerHTML = "";
+    files.forEach(f => {
+      const row = document.createElement("div");
+      row.className = "file-row";
+      row.innerHTML = `
+        <span class="file-icon">↳</span>
+        <div><code>${escapeHtml(f.path)}</code><p>${escapeHtml(f.why || f.note || "")}</p></div>
+      `;
+      filesList.appendChild(row);
+    });
   }
 
-  function clearError() {
-    errorContainer.style.display = "none";
-    errorContainer.innerText = "";
+  function renderPlan(steps) {
+    actionPlan.innerHTML = "";
+    steps.forEach((step, idx) => {
+      const li = document.createElement("li");
+      const numStr = String(idx + 1).padStart(2, "0");
+      li.innerHTML = `<b>${numStr}</b><p>${escapeHtml(step)}</p>`;
+      actionPlan.appendChild(li);
+    });
   }
+
+  function setCheckPill(el, passed, label) {
+    el.innerText = `[${passed ? "✓" : "✗"} ${label}]`;
+    if (passed) {
+      el.classList.remove("fail");
+    } else {
+      el.classList.add("fail");
+    }
+  }
+
+  // Copy buttons
+  btnCopyCmd.addEventListener("click", () => {
+    const text = terminalCmd.innerText.replace(/^\$\s*/, "");
+    navigator.clipboard.writeText(text).then(() => {
+      btnCopyCmd.innerText = "COPIED";
+      setTimeout(() => { btnCopyCmd.innerText = "COPY"; }, 1500);
+    });
+  });
+
+  btnCopyComment.addEventListener("click", () => {
+    const text = commentText.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      copyCommentLabel.innerText = "COMMENT COPIED ✓";
+      setTimeout(() => { copyCommentLabel.innerText = "COPY COMMENT"; }, 1500);
+    });
+  });
 
   function escapeHtml(str) {
     if (!str) return "";

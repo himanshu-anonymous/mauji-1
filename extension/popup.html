@@ -3,380 +3,370 @@
 <head>
   <meta charset="UTF-8">
   <title>First PR & Repo Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    :root {
+      font-family: 'JetBrains Mono', monospace;
+      color: #121212;
+      background: #ebebff;
     }
+    * { box-sizing: border-box; }
     body {
-      width: 440px;
-      min-height: 520px;
-      background-color: #0d1117;
-      color: #c9d1d9;
-      padding: 16px;
-      font-size: 13px;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .brand svg {
-      fill: #f0f6fc;
-    }
-    .brand h1 {
-      font-size: 15px;
-      font-weight: 600;
-      color: #f0f6fc;
-    }
-    .badge-temporal {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 12px;
-      background: #7c3aed22;
-      color: #a78bfa;
-      border: 1px solid #7c3aed55;
-    }
-    .form-group {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #8b949e;
-      margin-bottom: 5px;
-    }
-    input, select {
-      width: 100%;
-      background-color: #161b22;
-      border: 1px solid #30363d;
-      color: #f0f6fc;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input:focus, select:focus {
-      border-color: #58a6ff;
-    }
-    .btn-scan {
-      width: 100%;
-      background-color: #238636;
-      color: #ffffff;
-      border: none;
-      padding: 9px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background 0.2s;
-    }
-    .btn-scan:hover {
-      background-color: #2ea043;
-    }
-    .btn-scan:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .spinner {
-      border: 2px solid #ffffff44;
-      border-top: 2px solid #ffffff;
-      border-radius: 50%;
-      width: 14px;
-      height: 14px;
-      animation: spin 0.8s linear infinite;
-      display: none;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    #error-container {
-      display: none;
-      background-color: #da363322;
-      border: 1px solid #da363388;
-      color: #f85149;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 12px;
-      font-size: 12px;
-    }
-    #results {
-      display: none;
-      margin-top: 14px;
-    }
-    .card {
-      background-color: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 12px;
-    }
-    /* Traffic Light */
-    .traffic-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .traffic-pill {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .traffic-GREEN {
-      background-color: #23863633;
-      color: #3fb950;
-      border: 1px solid #238636;
-    }
-    .traffic-AMBER {
-      background-color: #d2992233;
-      color: #e3b341;
-      border: 1px solid #d29922;
-    }
-    .traffic-RED {
-      background-color: #da363333;
-      color: #f85149;
-      border: 1px solid #da3633;
-    }
-    .scores-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .score-box {
-      background-color: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 8px 6px;
-      text-align: center;
-    }
-    .score-val {
-      font-size: 20px;
-      font-weight: 700;
-      color: #58a6ff;
-    }
-    .score-title {
-      font-size: 10px;
-      color: #8b949e;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #f0f6fc;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .signal-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-top: 6px;
-    }
-    .sig-pill {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      color: #8b949e;
-    }
-    .sig-pill.active {
-      color: #3fb950;
-      border-color: #23863655;
-      background: #2386361a;
-    }
-    .file-item {
-      padding: 6px 0;
-      border-bottom: 1px solid #21262d;
-      font-size: 12px;
-    }
-    .file-item:last-child {
-      border-bottom: none;
-    }
-    .file-path {
-      font-family: monospace;
-      color: #58a6ff;
+      margin: 0;
+      width: 420px;
+      min-height: 580px;
+      background: #ebebff;
       font-size: 11px;
     }
-    .code-block {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 4px;
-      padding: 6px 8px;
-      font-family: monospace;
-      font-size: 11px;
-      color: #79c0ff;
-      margin-top: 4px;
-      overflow-x: auto;
+    button, input, select { font: inherit; color: inherit; }
+    button, select { cursor: pointer; }
+
+    .popup-shell {
+      --canvas: #ebebff;
+      --surface: #ffffff;
+      --ink: #121212;
+      --line: #121212;
+      --muted: #5d5d58;
+      --lime: #00ff87;
+      --pink: #ff4d8d;
+      --cyan: #38dbff;
+      --yellow: #ffe500;
+      --violet: #5c4bff;
+      --orange: #ff5c00;
+      --terminal: #05070a;
+      --stroke: 2.5px;
+      width: 420px;
+      margin: 0 auto;
+      color: var(--ink);
+      background: linear-gradient(rgba(18,18,18,.045) 1px, transparent 1px), var(--canvas);
+      background-size: 100% 24px;
+      border-inline: var(--stroke) solid var(--line);
     }
-    .checklist {
-      list-style-type: decimal;
-      padding-left: 18px;
+
+    .popup-shell.dark {
+      --canvas: #08090c;
+      --surface: #12141a;
+      --ink: #f0f6fc;
+      --line: #ddfbff;
+      --muted: #8b949e;
+      --lime: #00ff87;
+      --pink: #ff1493;
+      --cyan: #00f0ff;
+      --yellow: #ffe500;
+      --violet: #7c5cff;
+      --orange: #ff7a00;
     }
-    .checklist li {
-      margin-bottom: 5px;
-      line-height: 1.35;
+
+    .header { padding: 18px; border-bottom: var(--stroke) solid var(--line); background: var(--surface); }
+    .brand-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .11em; }
+    h1, h2 { font-family: 'Space Grotesk', sans-serif; }
+    h1 { margin: 0; font-size: 20px; line-height: 1; letter-spacing: -.055em; font-weight: 700; white-space: nowrap; }
+    h1 span { color: var(--violet); }
+    h1 strong {
+      display: inline-block;
+      padding: 2px 5px;
+      border: 2px solid var(--line);
+      background: var(--pink);
+      color: #121212;
+      box-shadow: 2px 2px 0 #000;
+      transform: rotate(-1deg);
     }
-    .comment-area {
+    .dark h1 strong { background: var(--violet); color: #fff; box-shadow: 2px 2px 0 var(--pink); }
+
+    .theme-toggle {
       position: relative;
+      width: 54px;
+      height: 28px;
+      flex: none;
+      padding: 0;
+      border: var(--stroke) solid var(--line);
+      border-radius: 14px;
+      background: var(--canvas);
+      box-shadow: 2px 2px 0 #000;
     }
-    .comment-text {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 4px;
-      padding: 8px;
-      font-size: 11px;
-      line-height: 1.4;
-      color: #c9d1d9;
-      margin-top: 6px;
-      user-select: all;
-    }
-    .btn-copy {
+    .theme-toggle i {
       position: absolute;
-      top: 0;
-      right: 0;
-      background: #21262d;
-      border: 1px solid #30363d;
-      color: #c9d1d9;
-      padding: 3px 8px;
-      border-radius: 4px;
+      top: 1px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #000;
+      border-radius: 50%;
+      background: var(--yellow);
+      color: #121212;
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 800;
+      transition: transform .15s ease;
+    }
+    .dark .theme-toggle { background: #0a0e27; box-shadow: 2px 2px 0 var(--cyan); }
+    .dark .theme-toggle i { transform: translateX(25px); background: var(--violet); color: #fff; border-color: #fff; }
+
+    .sponsors { display: flex; gap: 6px; margin-top: 15px; }
+    .sponsors span {
+      padding: 4px 7px;
+      border: var(--stroke) solid var(--line);
+      background: var(--surface);
+      box-shadow: 3px 3px 0 #000;
+      color: var(--ink);
+      font-size: 8px;
+      font-weight: 800;
+    }
+    .sponsors .jarvis { background: var(--cyan); color: #121212; }
+    .sponsors .temporal { background: var(--yellow); color: #121212; }
+    .sponsors .kepler { background: var(--lime); color: #121212; }
+    .dark .sponsors span { background: #12141a; color: var(--ink); }
+
+    .input-zone { padding: 14px 18px; border-bottom: var(--stroke) solid var(--line); }
+    .input-zone label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+    .cli-input {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      border: var(--stroke) solid var(--line);
+      background: var(--surface);
+      box-shadow: 3px 3px 0 #000;
+    }
+    .cli-input span { color: var(--orange); font-size: 16px; font-weight: 800; }
+    .cli-input input { width: 100%; border: 0; outline: 0; background: transparent; font-size: 10px; font-weight: 700; color: inherit; }
+    .action-row { display: grid; grid-template-columns: 130px 1fr; gap: 11px; margin-top: 12px; }
+    .action-row select, .scan-button {
+      height: 38px;
+      border: var(--stroke) solid var(--line);
+      border-radius: 0;
       font-size: 10px;
-      cursor: pointer;
+      font-weight: 800;
     }
-    .btn-copy:hover {
-      background: #30363d;
+    .action-row select { padding: 0 9px; background: var(--surface); box-shadow: 3px 3px 0 #000; color: inherit; }
+    .scan-button { background: var(--lime); color: #121212; box-shadow: 3px 3px 0 #000; transition: transform .08s, box-shadow .08s; }
+    .scan-button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #000; }
+    .scan-button:disabled { opacity: 0.6; cursor: wait; }
+
+    .status-banner {
+      min-height: 56px;
+      display: flex;
+      align-items: stretch;
+      margin: 14px 18px;
+      border: var(--stroke) solid var(--line);
+      background: var(--lime);
+      color: #121212;
+      box-shadow: 3px 3px 0 #000;
     }
+    .stripe { width: 16px; flex: none; border-right: var(--stroke) solid #121212; background: repeating-linear-gradient(135deg,#121212 0 5px,var(--yellow) 5px 10px); }
+    .status-banner > div:nth-child(2) { padding: 9px 12px; flex: 1; }
+    .status-banner p, .status-banner strong { margin: 0; font-size: 9px; font-weight: 800; }
+    .status-banner strong { font-family: 'Space Grotesk', sans-serif; font-size: 12px; }
+    .status-light { align-self: center; width: 16px; height: 16px; margin-right: 14px; border: var(--stroke) solid #121212; background: var(--lime); box-shadow: 2px 2px 0 #000; }
+
+    .scores { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; padding: 0 18px 14px; }
+    .score-card {
+      padding: 9px 8px 7px;
+      border: var(--stroke) solid var(--line);
+      background: var(--cyan);
+      box-shadow: 3px 3px 0 #000;
+    }
+    .score-card:nth-child(2) { background: var(--yellow); }
+    .score-card:nth-child(3) { background: var(--pink); }
+    .score-card strong { color: #121212; font-size: 24px; line-height: 1; letter-spacing: -.08em; }
+    .score-card > span { color: var(--muted); font-size: 8px; font-weight: 800; }
+    .score-card p { display: flex; flex-direction: column; margin: 5px 0 0; padding-top: 4px; border-top: 1px dashed var(--line); font-size: 8px; line-height: 1.25; font-weight: 800; }
+    .dark .score-card { background: #12141a; }
+    .dark .score-card:nth-child(1) strong { color: var(--cyan); }
+    .dark .score-card:nth-child(2) strong { color: var(--lime); }
+    .dark .score-card:nth-child(3) strong { color: var(--pink); }
+
+    .module, .comment-module, .readiness { margin: 0 18px 14px; }
+    .section-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .section-heading h2 { margin: 0; font-size: 13px; letter-spacing: -.02em; }
+    .section-heading h2 span { display: inline-block; padding: 2px 4px; margin-right: 5px; border: 2px solid var(--line); background: var(--yellow); color: #121212; font: 800 8px 'JetBrains Mono'; }
+    .section-heading em { padding: 2px 5px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-size: 8px; font-style: normal; font-weight: 800; }
+    
+    .file-list, .plan {
+      border: var(--stroke) solid var(--line);
+      background: #fffceb;
+      box-shadow: 3px 3px 0 #000;
+    }
+    .dark .file-list, .dark .plan { background: #12141a; }
+    .file-row { display: flex; gap: 8px; padding: 8px 10px; align-items: flex-start; }
+    .file-row + .file-row, .plan li + li { border-top: 1px dashed var(--line); }
+    .file-icon { display: grid; place-items: center; width: 20px; height: 20px; flex: none; border: 2px solid var(--line); background: var(--yellow); color: #121212; font-weight: 800; }
+    .file-row code { display: inline-block; padding: 2px 4px; background: var(--canvas); color: var(--ink); font-size: 9px; font-weight: 800; }
+    .file-row p { margin: 3px 0 0; color: var(--muted); font-size: 8px; font-weight: 600; }
+
+    .terminal { border: var(--stroke) solid var(--line); background: var(--terminal); color: var(--lime); box-shadow: 3px 3px 0 #000; }
+    .terminal-top { display: flex; justify-content: space-between; padding: 6px 8px; border-bottom: 1px solid #46505b; color: #f0f6fc; font-size: 8px; }
+    .terminal-top i { color: var(--orange); font-style: normal; letter-spacing: 2px; }
+    .command { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 8px 6px; }
+    .command code { font-size: 9px; white-space: nowrap; overflow-x: auto; }
+    .command code b { color: var(--orange); }
+    .command button { padding: 3px 6px; border: 2px solid var(--lime); background: transparent; color: var(--lime); font-size: 8px; font-weight: 800; }
+    .terminal > p { margin: 0; padding: 0 8px 8px; font-size: 8px; }
+    .terminal > p span { color: #f0f6fc; }
+
+    .plan { margin-block: 0; padding: 0; list-style: none; }
+    .plan li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; }
+    .plan b { display: grid; place-items: center; width: 24px; height: 24px; flex: none; border: 2px solid var(--line); border-radius: 50%; color: #121212; font-size: 9px; box-shadow: 2px 2px 0 #000; }
+    .plan li:nth-child(1) b { background: var(--pink); }
+    .plan li:nth-child(2) b { background: var(--yellow); }
+    .plan li:nth-child(3) b { background: var(--lime); }
+    .plan p { margin: 0; font-size: 9px; font-weight: 600; line-height: 1.35; }
+
+    .readiness {
+      border: var(--stroke) solid var(--line);
+      background: var(--violet);
+      color: #fff;
+      box-shadow: 3px 3px 0 #000;
+    }
+    .readiness-title { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 6px; }
+    .readiness-title span { display: inline-block; padding: 2px 5px; margin-bottom: 3px; border: 2px solid var(--line); background: var(--pink); color: #121212; font-size: 8px; font-weight: 800; }
+    .readiness-title h2 { margin: 0; font-size: 15px; }
+    .readiness-title strong { color: var(--lime); font-size: 26px; -webkit-text-stroke: 1px var(--line); }
+    .checks { display: flex; gap: 6px; padding: 0 12px 9px; }
+    .checks span { padding: 4px 6px; border: 2px solid var(--line); background: var(--lime); color: #121212; box-shadow: 2px 2px 0 #000; font-size: 8px; font-weight: 800; }
+    .checks .fail { background: var(--orange); color: #121212; }
+    .readiness > p { margin: 0; padding: 6px 12px; border-top: var(--stroke) solid var(--line); color: #fff; font-size: 8px; }
+    .readiness > p b { color: var(--lime); }
+    .dark .readiness { background: #0a0e27; }
+
+    .comment-module { padding: 8px; border: var(--stroke) solid var(--line); background: #d4fce6; box-shadow: 3px 3px 0 #000; }
+    .comment-module blockquote { display: flex; gap: 8px; margin: 0; padding: 10px; border: var(--stroke) solid var(--line); border-bottom: 0; background: #d4fce6; }
+    .comment-module blockquote > span { color: var(--orange); font: 24px/.8 Georgia, serif; }
+    .comment-module blockquote p { margin: 0; font-size: 9px; line-height: 1.45; font-weight: 600; }
+    .copy-comment { width: 100%; height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border: var(--stroke) solid var(--line); background: #05070a; color: var(--pink); font-size: 9px; font-weight: 800; box-shadow: 3px 3px 0 #000; }
+    .dark .comment-module { background: #12141a; }
+    .dark .comment-module blockquote { background: #12141a; }
+    .dark .copy-comment { background: var(--lime); color: #121212; }
+
+    footer { display: flex; justify-content: space-between; padding: 8px 16px; border-top: var(--stroke) solid var(--line); background: var(--orange); color: #121212; font-size: 8px; font-weight: 800; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <svg height="20" width="20" viewBox="0 0 16 16">
-        <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-      </svg>
-      <h1>First PR & Repo Copilot</h1>
-    </div>
-    <span class="badge-temporal">Temporal Powered</span>
-  </header>
+  <main class="popup-shell dark" id="popup-shell">
+    <header class="header">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">OSS MISSION CONTROL / 001</p>
+          <h1>FIRST PR <span>//</span> <strong>COPILOT</strong></h1>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme">
+          <i id="theme-icon">☾</i>
+        </button>
+      </div>
+      <div class="sponsors">
+        <span class="jarvis">[JARVISLABS]</span>
+        <span class="temporal">[TEMPORAL]</span>
+        <span class="kepler">[KEPLER_SRE]</span>
+      </div>
+    </header>
 
-  <div class="form-group">
-    <label for="github-url">Target Repository or Issue URL</label>
-    <input type="text" id="github-url" placeholder="https://github.com/owner/repo or .../issues/42">
-  </div>
+    <section class="input-zone">
+      <label for="repo-url">ISSUE OR REPO COORDINATES</label>
+      <div class="cli-input">
+        <span>&gt;</span>
+        <input id="repo-url" value="https://github.com/himanshu-anonymous/mauji-1">
+      </div>
+      <div class="action-row">
+        <select id="scan-mode">
+          <option value="first_pr">FIRST PR</option>
+          <option value="sre_ops">SRE AUDIT</option>
+          <option value="maintainer_audit">DEEP SCAN</option>
+        </select>
+        <button class="scan-button" id="btn-scan">SCAN REPO ↗</button>
+      </div>
+    </section>
 
-  <div class="form-group">
-    <label for="use-case">Reviewer Persona</label>
-    <select id="use-case">
-      <option value="first_pr">First-Time Contributor (Hacktoberfest)</option>
-      <option value="sre_ops">SRE / DevOps Audit (Kepler Mode)</option>
-      <option value="maintainer_audit">Maintainer / Code Auditor</option>
-    </select>
-  </div>
-
-  <button class="btn-scan" id="btn-scan">
-    <span class="spinner" id="spinner"></span>
-    <span id="btn-text">Scan Codebase</span>
-  </button>
-
-  <div id="error-container"></div>
-
-  <!-- Results Section -->
-  <div id="results">
-
-    <!-- Traffic Light Availability -->
-    <div class="card traffic-card">
+    <section class="status-banner" id="status-banner">
+      <div class="stripe"></div>
       <div>
-        <div style="font-size: 11px; color: #8b949e;">ISSUE AVAILABILITY</div>
-        <div id="avail-reason" style="margin-top: 3px; font-size: 12px;"></div>
+        <p id="status-badge">[STATUS: REPO READY]</p>
+        <strong id="status-reason">// REPOSITORY ROOT SCANNED</strong>
       </div>
-      <div id="avail-badge" class="traffic-pill"></div>
-    </div>
+      <span class="status-light" id="status-light"></span>
+    </section>
 
-    <!-- Scores Grid -->
-    <div class="scores-grid">
-      <div class="score-box">
-        <div class="score-val" id="score-overall">--</div>
-        <div class="score-title">Overall Score</div>
+    <section class="scores">
+      <article class="score-card">
+        <strong id="score-structure">85</strong><span>/100</span>
+        <p><span>STRUCTURE</span></p>
+      </article>
+      <article class="score-card">
+        <strong id="score-beginner">80</strong><span>/100</span>
+        <p><span>BEGINNER_</span><span>FRIENDLY</span></p>
+      </article>
+      <article class="score-card">
+        <strong id="score-kepler">75</strong><span>/100</span>
+        <p><span>KEPLER_SRE</span></p>
+      </article>
+    </section>
+
+    <section class="module files-module">
+      <div class="section-heading">
+        <h2><span>01</span> FILES TO INSPECT</h2>
+        <em id="files-count">3 FILES</em>
       </div>
-      <div class="score-box">
-        <div class="score-val" id="score-structure">--</div>
-        <div class="score-title">Structure</div>
+      <div class="file-list" id="files-list"></div>
+    </section>
+
+    <section class="module">
+      <div class="section-heading">
+        <h2><span>02</span> TERMINAL RUN</h2>
+        <em>READY</em>
       </div>
-      <div class="score-box">
-        <div class="score-val" id="score-sre">--</div>
-        <div class="score-title">Kepler SRE</div>
+      <div class="terminal">
+        <div class="terminal-top"><span>LOCAL://SHELL</span><i>● ● ●</i></div>
+        <div class="command">
+          <code id="terminal-cmd"><b>$</b> git clone https://github.com/himanshu-anonymous/mauji-1.git</code>
+          <button id="btn-copy-cmd">COPY</button>
+        </div>
+        <p>✓ All checks passed <span>in 0.82s</span></p>
       </div>
-    </div>
+    </section>
 
-    <!-- Summary -->
-    <div class="card">
-      <div class="section-title">Summary & Objective</div>
-      <div id="summary-text" style="line-height: 1.4;"></div>
-    </div>
-
-    <!-- Kepler SRE & Actions CI -->
-    <div class="card">
-      <div class="section-title">
-        <span>Kepler SRE & CI/CD Health</span>
+    <section class="module">
+      <div class="section-heading">
+        <h2><span>03</span> ACTION PLAN</h2>
+        <em>~20 MIN</em>
       </div>
-      <div id="kepler-insight" style="font-size: 11px; line-height: 1.4; color: #8b949e;"></div>
-      <div class="signal-pills" id="signal-pills"></div>
-    </div>
+      <ol class="plan" id="action-plan"></ol>
+    </section>
 
-    <!-- Files to Inspect -->
-    <div class="card">
-      <div class="section-title">Files to Touch & Inspect</div>
-      <div id="files-list"></div>
-    </div>
+    <section class="readiness">
+      <div class="readiness-title">
+        <div><span>KEPLER_SRE</span><h2>KEPLER SRE AUDIT</h2></div>
+        <strong id="kepler-score-pct">85%</strong>
+      </div>
+      <div class="checks" id="kepler-checks">
+        <span id="chk-docker">[✓ DOCKER]</span>
+        <span id="chk-cicd">[✓ CI/CD]</span>
+        <span id="chk-k8s" class="fail">[✗ K8S]</span>
+      </div>
+      <p id="kepler-verdict">PRODUCTION SIGNAL: <b>STRONG</b> // TOPOLOGY AUDITED</p>
+    </section>
 
-    <!-- Setup Commands -->
-    <div class="card">
-      <div class="section-title">Quickstart Setup Commands</div>
-      <div id="setup-commands"></div>
-    </div>
+    <section class="comment-module">
+      <div class="section-heading">
+        <h2><span>04</span> POLITE COMMENT</h2>
+        <em>MARKDOWN</em>
+      </div>
+      <blockquote>
+        <span>“</span>
+        <p id="comment-text">Hi! I noticed this issue is unassigned. I've reviewed the files and would love to submit a PR—could you please assign it to me?</p>
+      </blockquote>
+      <button class="copy-comment" id="btn-copy-comment">
+        <span id="copy-comment-label">COPY COMMENT</span> <span>⌘C</span>
+      </button>
+    </section>
 
-    <!-- Personalized Action Plan -->
-    <div class="card">
-      <div class="section-title">Personalized Action Plan</div>
-      <ol class="checklist" id="action-plan"></ol>
-    </div>
-
-    <!-- Ready to Post Comment -->
-    <div class="card comment-area">
-      <div class="section-title">Ready-to-Post Issue Comment</div>
-      <button class="btn-copy" id="btn-copy-comment">Copy</button>
-      <div class="comment-text" id="comment-text"></div>
-    </div>
-
-  </div>
+    <footer><span>PR_COPILOT v1.0.4</span><b>● SYSTEM ONLINE</b></footer>
+  </main>
 
   <script src="popup.js"></script>
 </body>
