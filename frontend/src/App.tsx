@@ -69,11 +69,20 @@ export default function App() {
         targetUrl = 'https://' + targetUrl
       }
 
-      const res = await fetch('http://localhost:8000/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ github_url: targetUrl, use_case: useCase }),
-      })
+      let res: Response
+      try {
+        res = await fetch('http://127.0.0.1:8000/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ github_url: targetUrl, use_case: useCase }),
+        })
+      } catch (err) {
+        res = await fetch('http://localhost:8000/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ github_url: targetUrl, use_case: useCase }),
+        })
+      }
 
       if (res.ok) {
         const data = await res.json()

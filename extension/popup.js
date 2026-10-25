@@ -78,11 +78,21 @@ document.addEventListener("DOMContentLoaded", () => {
     scanBtn.innerText = "SCANNING...";
 
     try {
-      const response = await fetch("http://localhost:8000/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ github_url: rawUrl, use_case: useCase })
-      });
+      let response;
+      try {
+        response = await fetch("http://127.0.0.1:8000/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ github_url: rawUrl, use_case: useCase })
+        });
+      } catch (networkErr) {
+        // Fallback to localhost if 127.0.0.1 failed
+        response = await fetch("http://localhost:8000/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ github_url: rawUrl, use_case: useCase })
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}`);
